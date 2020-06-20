@@ -5,6 +5,8 @@ using UnityEditor;
 
 public class Vehicle : MonoBehaviour
 {
+    [SerializeField]
+    GridManager gridManager;
     float wanderTheta = 0;
     public bool debug = false;
     public Vector2 velocity;
@@ -13,13 +15,19 @@ public class Vehicle : MonoBehaviour
     float MaxSpeed = 1f;
     [SerializeField]
     float MaxForce = .3f;
+
+    [SerializeField]
+    bool selfMove = false;
    
 
 
 
     private void FixedUpdate()
     {
-        wander();
+        if (selfMove)
+            wander();
+        else
+            applyForce(gridManager.FlowField(transform.position));
         Move();
         rot();
     }
