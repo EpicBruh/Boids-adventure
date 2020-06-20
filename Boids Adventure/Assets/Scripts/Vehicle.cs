@@ -5,82 +5,84 @@ using UnityEditor;
 
 public class Vehicle : MonoBehaviour
 {
-    Rigidbody2D rb;
-    public float MaxSpeed = .5f;
-    public float MaxForce = 1f;
-    //public float NearDistance = 3f;
-    public float radius = 3f;
-    public float wanderDistance = 5f;
+    float wanderTheta = 0;
     public bool debug = false;
-    
-    // Start is called before the first frame update
-    void Start()
-    {
-        rb = GetComponent<Rigidbody2D>();
-        rb.velocity = new Vector2(0, 1);
-    }
+    public Vector2 velocity;
+    public Vector2 acceleration;
+    [SerializeField]
+    float MaxSpeed = 1f;
+    [SerializeField]
+    float MaxForce = .3f;
+   
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
 
     private void FixedUpdate()
     {
         wander();
-        
+        Move();
+        rot();
+    }
 
 
 
 
 
-
-
-        //Rotate body
-        Vector2 v = rb.velocity;
+    public void rot() {
+        Vector2 v = velocity;
         float angle = Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - 90;
         transform.rotation = Quaternion.AngleAxis(angle, new Vector3(0, 0, 1));
-
     }
 
-    public void seek(Vector2 target)
+    public void applyForce(Vector2 force)
     {
-        //Steering Force = Desired velocity - Actual velocity
-        Vector2 desiredVel = target - (Vector2)transform.position;
-        float d = desiredVel.magnitude;
-        desiredVel.Normalize();
-        if (d < radius)
-        {
-            d = map(d, 0, radius, 0, MaxSpeed);
-            desiredVel *= d;
-        }
-        else
-        {
-            desiredVel *= MaxSpeed;
-        }
-
-        Vector2 SteerForce = desiredVel - rb.velocity;
-        SteerForce = Vector2.ClampMagnitude(SteerForce, MaxForce);
-        rb.AddForce(SteerForce);
+        acceleration += force;
     }
+
+    public void Move()
+    {
+        velocity += acceleration;
+        velocity = Vector2.ClampMagnitude(velocity, MaxSpeed);
+        transform.position += (Vector3)velocity * Time.deltaTime;
+        acceleration *= 0;
+    }
+
+
+
+
+    //Steering Force = Desired velocity - Actual velocity
+    public void seek(Vector2 target)
+    {        
+        Vector2 desiredVel = target - (Vector2)transform.position;
+        desiredVel.Normalize();
+        desiredVel *= MaxSpeed;
+        Vector2 SteerForce = desiredVel - velocity;
+        SteerForce = Vector2.ClampMagnitude(SteerForce, MaxForce);
+        applyForce(SteerForce);
+    }
+
 
 
 
     //Wander Function
     public void wander() {
-        Vector2 desiredLoc = rb.velocity;
-        desiredLoc.Normalize();
-        desiredLoc *= wanderDistance;
-        desiredLoc += (Vector2)transform.position;
-        Vector2 v = rb.velocity;
-        float angle = Mathf.Atan2(v.y, v.x);
-        float wanderTheta = Random.Range(-0.3f, 0.3f);
-        Vector2 circleOffset = new Vector2(radius * Mathf.Cos(angle + wanderTheta), radius * Mathf.Sin(angle + wanderTheta));
-        Debug.Log(circleOffset);
-        Vector2 target = desiredLoc + circleOffset;
-        seek(target);
+        float wanderR = 1.3f;
+        float wanderD = 4f;
+        float change = 0.3f;
+        wanderTheta += Random.Range(-change, change);
 
+        Vector2 circlePos = velocity;
+        circlePos.Normalize();
+        circlePos *= wanderD;
+        circlePos += (Vector2)transform.position;
+
+        Vector2 v = velocity.normalized;
+        float h = Mathf.Atan2(v.y, v.x);
+        
+        Vector2 circleOffset = new Vector2(wanderR * Mathf.Cos(h + wanderTheta), wanderR * Mathf.Sin(h + wanderTheta));
+        Vector2 target = circlePos + circleOffset;
+        seek(target);
+        drawWanderStuff(transform.position, circlePos, target, wanderR);
     }
 
 
@@ -101,8 +103,25 @@ public class Vehicle : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        //if(debug)
-            //
+        if (debug)
+        {
+
+        }
+            
     }
 
+
+    void drawWanderStuff(Vector3 position, Vector2 circle, Vector2 target, float rad)
+    {
+
+
+        if (debug)
+        {
+            Debug.DrawLine(position, circle);
+            Debug.DrawLine(circle, target);
+        }
+        
+    }
+
+    
 }
