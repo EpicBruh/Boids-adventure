@@ -7,7 +7,7 @@ public class GridManager : MonoBehaviour
     public Sprite sprite;
     public Vector2[,] Grid;
     int vertical, horizontal, cols, rows;
-    [Range(0,100)]
+    [Range(-50,50)]
     public float scale;
     float xOffset;
     float yOffset;
@@ -15,12 +15,35 @@ public class GridManager : MonoBehaviour
 
     //public GameObject target;
     public float squareRadius = 0.5f;
+    public string seed;
+    public bool useSeed = false;
+    
     void Update()
     {
+        
+
         if (Input.GetMouseButtonDown(0))
         {
-            xOffset = Random.Range(1, 999999f);
-            yOffset = Random.Range(1, 999999f);
+            float xPart = 0;
+            float yPart = 0;
+            for (int i = 0; i < seed.Length / 2; i++)
+            {
+                xPart += (int)seed[i];
+            }
+            for (int i = seed.Length / 2; i < seed.Length; i++)
+            {
+                yPart += (int)seed[i];
+            }
+            if (useSeed)
+            {
+                xOffset = xPart;
+                yOffset = yPart;
+            }
+            else {
+                xOffset = Random.Range(1, 999999f);
+                yOffset = Random.Range(1, 999999f);
+            }
+            
             vertical = (int)Camera.main.orthographicSize;
             horizontal = (int)(vertical * (float)Screen.width / Screen.height);
             cols = horizontal * 2;
