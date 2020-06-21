@@ -70,8 +70,6 @@ public class Vehicle : MonoBehaviour
     }
 
 
-
-
     //Wander Function
     public void wander() {
         float wanderR = 1.3f;
@@ -93,13 +91,6 @@ public class Vehicle : MonoBehaviour
         drawWanderStuff(transform.position, circlePos, target, wanderR);
     }
 
-
-
-
-
-
-
-
     public float map(float OldValue, float OldMin, float OldMax, float NewMin, float NewMax)
     {
         float OldRange = OldMax - OldMin;
@@ -107,17 +98,6 @@ public class Vehicle : MonoBehaviour
         float NewValue = ((OldValue - OldMin) * NewRange / OldRange) + NewMin;
         return NewValue;
     }
-
-
-    private void OnDrawGizmos()
-    {
-        if (debug)
-        {
-
-        }
-            
-    }
-
 
     void drawWanderStuff(Vector3 position, Vector2 circle, Vector2 target, float rad)
     {

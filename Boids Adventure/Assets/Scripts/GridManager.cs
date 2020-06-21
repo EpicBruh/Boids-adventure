@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class GridManager : MonoBehaviour
 {
@@ -8,7 +9,12 @@ public class GridManager : MonoBehaviour
     public Vector2[,] Grid;
     int vertical, horizontal, cols, rows;
     [SerializeField]
-    Transform target;
+    bool debug = false;
+    [SerializeField]
+    bool spawnTiles = false;
+    [SerializeField]
+    [Range(0, 2f)]
+    float debugRadius = .2f;
 
 
     void Start()
@@ -25,24 +31,25 @@ public class GridManager : MonoBehaviour
 
             for (int j = 0; j < rows; j++)
             {
-                Grid[i, j] = new Vector2(Mathf.Cos(Mathf.PerlinNoise(xtheta,ytheta)),Mathf.Sin(Mathf.PerlinNoise(ytheta,xtheta)));
+                Grid[i, j] = new Vector2(Mathf.Cos(map(Mathf.PerlinNoise(xtheta,ytheta),0,1,0,2*Mathf.PI)),Mathf.Sin(map(Mathf.PerlinNoise(ytheta,xtheta),0,1,0,2*Mathf.PI)));
                 
-                SpawnTile(i, j, Grid[i,j]);
-                xtheta += Random.Range(1f,4f);
-                ytheta += Random.Range(-6f, 3f);
+                //if (spawnTiles)
+            //        SpawnTile(i, j, Grid[i,j]);
+             //   xtheta += Random.Range(1f,4f);
+             //   ytheta += Random.Range(-6f, 3f);
+                //Grid[i, j] = new Vector2(Mathf.Cos(xtheta), Mathf.Sin(ytheta));
+                xtheta += Random.Range(0.01f,0.02f);
+                ytheta += Random.Range(0.01f,0.02f);
             }
 
         }
         
     }
 
-    private void Update()
-    {
-        
-    }
-
     public Vector2 PositionMap(float x, float y)
     {
+        x -= Camera.main.transform.position.x;
+        y -= Camera.main.transform.position.y;
         float wholeX = (int)x;
         float wholeY = (int)y;
         float i, j;
@@ -62,16 +69,23 @@ public class GridManager : MonoBehaviour
         {
             j = wholeY + .5f;
         }
-        return new Vector2(i + (horizontal - .5f), j + (vertical - .5f));
+        Vector2 index = new Vector2(i + (horizontal - .5f), j + (vertical - .5f));
+        return index;
+       
     }
 
     public Vector2 FlowField(Vector2 pos)
     {
         Vector2 index = PositionMap(pos.x, pos.y);
-        if (pos.x >= cols || pos.x < 0 || pos.y >= rows || pos.y < 0)
-            return new Vector2();
-        Vector2 force = Grid[(int)index.x, (int)index.y];
-        return force;
+        try
+        {
+            Vector2 force = Grid[(int)index.x, (int)index.y];
+            return force;
+        }
+        catch
+        {
+                return new Vector2(0, 0);
+        }
     }
 
 
@@ -87,18 +101,29 @@ public class GridManager : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        for (int i = 0; i < cols; i++)
+        if (debug)
         {
-
-            for (int j = 0; j < rows; j++)
+            for (int i = 0; i < cols; i++)
             {
-                //Vector2 pos = new Vector2(i - (horizontal - 0.5f), j - (vertical - 0.5f));
-                
-               // Debug.Log(pos);
-               // Debug.DrawLine(pos, pos + (Grid[i,j].normalized)*0.2f);
-            }
 
+                for (int j = 0; j < rows; j++)
+                {
+
+                    Vector2 pos = new Vector2(i - (horizontal - 0.5f) + Camera.main.transform.position.x, j - (vertical - 0.5f) + Camera.main.transform.position.y);
+                    Handles.DrawWireDisc(pos, new Vector3(0, 0, 1), debugRadius);
+                    Debug.DrawLine(pos, pos + (Grid[i, j].normalized) * debugRadius);
+                }
+
+            }
         }
+    }
+
+    public float map(float OldValue, float OldMin, float OldMax, float NewMin, float NewMax)
+    {
+        float OldRange = OldMax - OldMin;
+        float NewRange = NewMax - NewMin;
+        float NewValue = ((OldValue - OldMin) * NewRange / OldRange) + NewMin;
+        return NewValue;
     }
 
 

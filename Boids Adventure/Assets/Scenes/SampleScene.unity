@@ -555,11 +555,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 835519d108018fb4982d8db97096faf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gridManager: {fileID: 0}
   debug: 0
   velocity: {x: 0, y: 0}
   acceleration: {x: 0, y: 0}
   MaxSpeed: 5
   MaxForce: 0.03
+  selfMove: 1
 --- !u!212 &1062252767
 SpriteRenderer:
   m_ObjectHideFlags: 0
