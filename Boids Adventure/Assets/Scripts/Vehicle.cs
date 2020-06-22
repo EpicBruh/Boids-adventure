@@ -29,6 +29,7 @@ public class Vehicle : MonoBehaviour
 
     private void Start()
     {
+        
         if (randomVelocity)
         {
             velocity = new Vector2(Random.Range(0,4), Random.Range(0,2));
@@ -45,11 +46,15 @@ public class Vehicle : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (selfMove)
-            wander();
+        if (!followThePath)
+        {
+            if (selfMove)
+                wander();
+            else
+                applyForce(gridManager.FlowField(transform.position));
+        }
         else
-            applyForce(gridManager.FlowField(transform.position));
-        
+            followPath(p);
         Move();
         rot();
     }
@@ -115,36 +120,38 @@ public class Vehicle : MonoBehaviour
 
     public void followPath(Path p)
     {
-        Vector2 predictLoc = (Vector2)transform.position + velocity;
+        Vector2 predict = velocity;
+        predict.Normalize();
+        predict *= 5f;
+        Vector2 predictLoc = (Vector2)transform.position + predict;
 
-        Vector2 ap = predictLoc - (Vector2)p.start.position;
-        Vector2 ab = (Vector2)(p.end.position - p.start.position);
-        float d = (Vector2.Dot(ap, ab))/ ab.magnitude;
-        Vector2 an = ab.normalized * d;
-        Vector2 normalPoint = an + (Vector2)p.start.position;
+        Vector2 a = p.start.position;
+        Vector2 b = p.end.position;
+
+        Vector2 normalPoint = getNormalPoint(predictLoc, a, b);
+
+        Vector2 dir = b - a;
+        dir.Normalize();
+        dir *= 3;
+        Vector2 target = normalPoint + dir;
 
         float distance = Vector2.Distance(predictLoc, normalPoint);
-        if(distance > p.radius)
+        
+        if (distance > p.radius)
         {
-            seek(normalPoint);
+            seek(target);
+            
         }
-        /*else
-        {
-            Vector2 target = (Vector2)p.end.position - normalPoint;
-            Vector2 target2 = (Vector2)p.start.position - normalPoint;
-            if (target.magnitude > target2.magnitude)
-            {
-                target.Normalize();
-                target *= MaxSpeed;
-                seek(target);
-            }
-            else
-            {
-                target2.Normalize();
-                target2 *= MaxSpeed;
-                seek(target2);
-            }
-        }*/
+    }
+
+    Vector2 getNormalPoint(Vector2 p, Vector2 a, Vector2 b)
+    {
+        Vector2 ap = p - a;
+        Vector2 ab = b - a;
+        ab.Normalize();
+        ab *= Vector2.Dot(ap, ab);
+        Vector2 normalPoint = a + ab;
+        return normalPoint;
     }
 
 
