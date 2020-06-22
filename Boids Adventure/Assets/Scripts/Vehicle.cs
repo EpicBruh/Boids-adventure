@@ -18,7 +18,28 @@ public class Vehicle : MonoBehaviour
 
     [SerializeField]
     bool selfMove = false;
-   
+    [SerializeField]
+    Path p;
+
+    [SerializeField]
+    bool followThePath = false;
+
+    [SerializeField]
+    bool randomVelocity = false;
+
+    private void Start()
+    {
+        if (randomVelocity)
+        {
+            velocity = new Vector2(Random.Range(0,4), Random.Range(0,2));
+        }
+        else
+        {
+            velocity = new Vector2();
+        }
+        acceleration = new Vector2();
+    }
+
 
 
 
@@ -28,6 +49,7 @@ public class Vehicle : MonoBehaviour
             wander();
         else
             applyForce(gridManager.FlowField(transform.position));
+        
         Move();
         rot();
     }
@@ -90,6 +112,42 @@ public class Vehicle : MonoBehaviour
         seek(target);
         drawWanderStuff(transform.position, circlePos, target, wanderR);
     }
+
+    public void followPath(Path p)
+    {
+        Vector2 predictLoc = (Vector2)transform.position + velocity;
+
+        Vector2 ap = predictLoc - (Vector2)p.start.position;
+        Vector2 ab = (Vector2)(p.end.position - p.start.position);
+        float d = (Vector2.Dot(ap, ab))/ ab.magnitude;
+        Vector2 an = ab.normalized * d;
+        Vector2 normalPoint = an + (Vector2)p.start.position;
+
+        float distance = Vector2.Distance(predictLoc, normalPoint);
+        if(distance > p.radius)
+        {
+            seek(normalPoint);
+        }
+        /*else
+        {
+            Vector2 target = (Vector2)p.end.position - normalPoint;
+            Vector2 target2 = (Vector2)p.start.position - normalPoint;
+            if (target.magnitude > target2.magnitude)
+            {
+                target.Normalize();
+                target *= MaxSpeed;
+                seek(target);
+            }
+            else
+            {
+                target2.Normalize();
+                target2 *= MaxSpeed;
+                seek(target2);
+            }
+        }*/
+    }
+
+
 
     public float map(float OldValue, float OldMin, float OldMax, float NewMin, float NewMax)
     {
