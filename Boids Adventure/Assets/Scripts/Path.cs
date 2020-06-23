@@ -4,13 +4,15 @@ using UnityEngine;
 
 public class Path : MonoBehaviour
 {
-    public Transform start;
-    public Transform end;
     public float radius = 4f;
-
-
+    public Transform[] points;
+    
     private void OnDrawGizmos()
     {
-        Debug.DrawLine(start.position, end.position);
+
+        for(int i = 0; i < points.Length - 1; i++)
+        {
+            Debug.DrawLine(points[i].position, points[i + 1].position, Color.red);
+        }
     }
 }

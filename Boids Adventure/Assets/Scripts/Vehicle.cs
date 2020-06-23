@@ -120,24 +120,49 @@ public class Vehicle : MonoBehaviour
 
     public void followPath(Path p)
     {
+        //Vector2 target;
         Vector2 predict = velocity;
         predict.Normalize();
         predict *= 5f;
         Vector2 predictLoc = (Vector2)transform.position + predict;
 
-        Vector2 a = p.start.position;
-        Vector2 b = p.end.position;
+        Vector2 target = new Vector2();
 
-        Vector2 normalPoint = getNormalPoint(predictLoc, a, b);
+        float worldRecord = 10000000;
+
+        for(int i = 0; i < p.points.Length - 1; i++)
+        {
+            Vector2 a = p.points[i].position;
+            Vector2 b = p.points[i + 1].position;
+            Vector2 normalPoint = getNormalPoint(predictLoc, a, b);
+            if (normalPoint.x < a.x || normalPoint.x > b.x)
+                normalPoint = b;
+            float distance = Vector2.Distance(predictLoc, normalPoint);
+
+            if (distance < worldRecord)
+            {
+                worldRecord = distance;
+
+                Vector2 dir = b - a;
+                dir.Normalize();
+                dir *= 10;
+
+                target = normalPoint;
+                target += dir;
+            }
+        }
+
+        //For single point, use below
+        /*Vector2 normalPoint = getNormalPoint(predictLoc, a, b); 
 
         Vector2 dir = b - a;
         dir.Normalize();
         dir *= 3;
-        Vector2 target = normalPoint + dir;
+        target = normalPoint + dir;
 
-        float distance = Vector2.Distance(predictLoc, normalPoint);
+        float distance = Vector2.Distance(predictLoc, normalPoint);*/
         
-        if (distance > p.radius)
+        if (worldRecord > p.radius)
         {
             seek(target);
             
