@@ -93,6 +93,7 @@ public class Vehicle : MonoBehaviour
         desiredVel *= MaxSpeed;
         Vector2 SteerForce = desiredVel - velocity;
         SteerForce = Vector2.ClampMagnitude(SteerForce, MaxForce);
+        //SteerForce *= MaxForce;
         applyForce(SteerForce);
     }
 
@@ -123,7 +124,7 @@ public class Vehicle : MonoBehaviour
         //Vector2 target;
         Vector2 predict = velocity;
         predict.Normalize();
-        predict *= 5f;
+        predict *= 1f;
         Vector2 predictLoc = (Vector2)transform.position + predict;
 
         Vector2 target = new Vector2();
@@ -135,20 +136,24 @@ public class Vehicle : MonoBehaviour
             Vector2 a = p.points[i].position;
             Vector2 b = p.points[i + 1].position;
             Vector2 normalPoint = getNormalPoint(predictLoc, a, b);
+
             if (normalPoint.x < a.x || normalPoint.x > b.x)
                 normalPoint = b;
+
             float distance = Vector2.Distance(predictLoc, normalPoint);
 
             if (distance < worldRecord)
             {
+                
                 worldRecord = distance;
 
                 Vector2 dir = b - a;
                 dir.Normalize();
-                dir *= 10;
+                dir *= 15;
 
                 target = normalPoint;
                 target += dir;
+                Debug.Log("a: " + a.ToString() + " b: " + b.ToString());
             }
         }
 
@@ -165,7 +170,6 @@ public class Vehicle : MonoBehaviour
         if (worldRecord > p.radius)
         {
             seek(target);
-            
         }
     }
 

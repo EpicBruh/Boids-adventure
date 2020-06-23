@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Path : MonoBehaviour
 {
-    public float radius = 4f;
+    public float radius = .5f;
     public Transform[] points;
     
     private void OnDrawGizmos()
