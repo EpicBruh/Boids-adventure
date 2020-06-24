@@ -5,6 +5,7 @@ using UnityEditor;
 
 public class Vehicle : MonoBehaviour
 {
+    //Variables
     [SerializeField]
     GridManager gridManager;
     float wanderTheta = 0;
@@ -27,7 +28,15 @@ public class Vehicle : MonoBehaviour
     [SerializeField]
     bool randomVelocity = false;
 
-    bool movingRight = true;
+
+    [SerializeField]
+    float radius = 2f;
+    
+  
+
+
+
+
 
     private void Start()
     {
@@ -43,11 +52,9 @@ public class Vehicle : MonoBehaviour
         acceleration = new Vector2();
     }
 
-
-
-
     private void FixedUpdate()
     {
+
         if (!followThePath)
         {
             if (selfMove)
@@ -57,14 +64,13 @@ public class Vehicle : MonoBehaviour
         }
         else
             followPath(p);
+
+
         Move();
         rot();
     }
 
-
-
-
-
+    
     public void rot() {
         Vector2 v = velocity;
         float angle = Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg - 90;
@@ -94,8 +100,9 @@ public class Vehicle : MonoBehaviour
         desiredVel.Normalize();
         desiredVel *= MaxSpeed;
         Vector2 SteerForce = desiredVel - velocity;
+        
         SteerForce = Vector2.ClampMagnitude(SteerForce, MaxForce);
-        //SteerForce *= MaxForce;
+        
         applyForce(SteerForce);
     }
 
@@ -123,7 +130,6 @@ public class Vehicle : MonoBehaviour
 
     public void followPath(Path p)
     {
-        //Vector2 target;
         float worldRecord = 10000000;
         Vector2 target = new Vector2();
         Vector2 predict = velocity;
@@ -145,38 +151,87 @@ public class Vehicle : MonoBehaviour
 
             if (distance < worldRecord)
             {
-
-                
                 worldRecord = distance;
-
-                //Vector2 dir = b - a;
-                //dir.Normalize();
-                //dir *= 15;
-                //if (!movingRight)
-                //    dir *= -1;
-
-                target = normalPoint;
-                //target += dir;
-                //Debug.Log("a: " + a.ToString() + " b: " + b.ToString());
+                target = normalPoint;              
             }
         }
-
-        //For single point, use below
-        /*Vector2 normalPoint = getNormalPoint(predictLoc, a, b); 
-
-        Vector2 dir = b - a;
-        dir.Normalize();
-        dir *= 3;
-        target = normalPoint + dir;
-
-        float distance = Vector2.Distance(predictLoc, normalPoint);*/
-
-        /*if (worldRecord > p.radius && worldRecord != 10000000)
+        
+        if (worldRecord > p.radius && worldRecord != 10000000)
         {
             seek(target);
-        }*/
-        seek(target);
+        }
+       
+        
     }
+
+    public void seperate(Vehicle[] boids ) {
+        float desiredSeparation = radius * 2;
+        Vector2 sum = new Vector2();
+        int count = 0;
+
+        foreach(Vehicle v in boids)
+        {
+            float d = Vector2.Distance(transform.position, v.transform.position);
+            if ((d > 0) && (d < desiredSeparation))
+            {
+                Vector2 diff = transform.position - v.transform.position;
+                diff.Normalize();
+                diff /= d;
+                sum += diff;
+                count++;
+            }
+        }
+        if (count > 0)
+        {
+            sum /= count;
+            sum.Normalize();
+            sum *= MaxSpeed;
+            Vector2 steerForce = sum - velocity;
+            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce*2.5f);
+            applyForce(steerForce);
+        }
+
+
+    }
+
+    public void cohesion(Vehicle[] boids)
+    {
+        float desiredCohesion = radius * 2 * 5;
+        float desiredSeparation = radius * 2;
+        Vector2 sum = new Vector2();
+        int count = 0;
+
+        foreach (Vehicle v in boids)
+        {
+
+            float d = Vector2.Distance(transform.position, v.transform.position);
+            if ((d > 0) && (d < desiredCohesion) && (d > desiredSeparation))
+            {
+                Vector2 diff = transform.position - v.transform.position;
+                diff.Normalize();
+                diff /= d;
+                sum += diff;
+                count++;
+            }
+        }
+        if (count > 0)
+        {
+            sum /= count;
+            sum.Normalize();
+            sum *= MaxSpeed;
+            Vector2 steerForce = sum - velocity;
+            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce*2.5f);
+            applyForce(-steerForce);
+        }
+    }
+
+
+    
+
+
+
+
+    
 
     Vector2 getNormalPoint(Vector2 p, Vector2 a, Vector2 b)
     {
@@ -200,15 +255,20 @@ public class Vehicle : MonoBehaviour
 
     void drawWanderStuff(Vector3 position, Vector2 circle, Vector2 target, float rad)
     {
-
-
         if (debug)
         {
             Debug.DrawLine(position, circle);
             Debug.DrawLine(circle, target);
-        }
-        
+        } 
     }
 
-    
+    private void OnDrawGizmos()
+    {
+        if (debug)
+        {
+            Handles.DrawWireDisc(transform.position, new Vector3(0, 0, 1), radius);
+        }
+    }
+
+
 }
