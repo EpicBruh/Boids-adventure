@@ -27,6 +27,8 @@ public class Vehicle : MonoBehaviour
     [SerializeField]
     bool randomVelocity = false;
 
+    bool movingRight = true;
+
     private void Start()
     {
         
@@ -122,14 +124,13 @@ public class Vehicle : MonoBehaviour
     public void followPath(Path p)
     {
         //Vector2 target;
+        float worldRecord = 10000000;
+        Vector2 target = new Vector2();
         Vector2 predict = velocity;
         predict.Normalize();
         predict *= 1f;
         Vector2 predictLoc = (Vector2)transform.position + predict;
-
-        Vector2 target = new Vector2();
-
-        float worldRecord = 10000000;
+        
 
         for(int i = 0; i < p.points.Length - 1; i++)
         {
@@ -144,16 +145,19 @@ public class Vehicle : MonoBehaviour
 
             if (distance < worldRecord)
             {
+
                 
                 worldRecord = distance;
 
-                Vector2 dir = b - a;
-                dir.Normalize();
-                dir *= 15;
+                //Vector2 dir = b - a;
+                //dir.Normalize();
+                //dir *= 15;
+                //if (!movingRight)
+                //    dir *= -1;
 
                 target = normalPoint;
-                target += dir;
-                Debug.Log("a: " + a.ToString() + " b: " + b.ToString());
+                //target += dir;
+                //Debug.Log("a: " + a.ToString() + " b: " + b.ToString());
             }
         }
 
@@ -166,11 +170,12 @@ public class Vehicle : MonoBehaviour
         target = normalPoint + dir;
 
         float distance = Vector2.Distance(predictLoc, normalPoint);*/
-        
-        if (worldRecord > p.radius)
+
+        /*if (worldRecord > p.radius && worldRecord != 10000000)
         {
             seek(target);
-        }
+        }*/
+        seek(target);
     }
 
     Vector2 getNormalPoint(Vector2 p, Vector2 a, Vector2 b)
