@@ -134,7 +134,7 @@ public class Vehicle : MonoBehaviour
         Vector2 target = new Vector2();
         Vector2 predict = velocity;
         predict.Normalize();
-        predict *= 1f;
+        predict *= .5f;
         Vector2 predictLoc = (Vector2)transform.position + predict;
         
 
