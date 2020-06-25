@@ -5,35 +5,45 @@ using UnityEditor;
 
 public class Vehicle : MonoBehaviour
 {
-    //Variables
+    //Global Variables
     [SerializeField]
     GridManager gridManager;
-    float wanderTheta = 0;
+    public Transform roomBorderMax;
+    public Transform roomBorderMin;
+    [SerializeField]
+    Path p;
+
+
+    //Debug Variables
+    public bool limitedBorders = false;
     public bool debug = false;
-    public Vector2 velocity;
-    public Vector2 acceleration;
     [SerializeField]
     float MaxSpeed = 1f;
     [SerializeField]
     float MaxForce = .3f;
-
+    [SerializeField]
+    [Range(0, 10)]
+    float radius = 2f;
+    [SerializeField]
+    [Range(0, 10)]
+    float cohesionMultiplier = 4f;
+    [SerializeField]
+    bool randomVelocity = false;
     [SerializeField]
     bool selfMove = false;
     [SerializeField]
-    Path p;
-
-    [SerializeField]
     bool followThePath = false;
 
-    [SerializeField]
-    bool randomVelocity = false;
+
+    //Placeholder Variables
+    float wanderTheta = 0;
+    public Vector2 velocity;
+    public Vector2 acceleration;
+    
+    
 
 
-    [SerializeField]
-    float radius = 2f;
 
-    public Transform roomBorderMax;
-    public Transform roomBorderMin;
 
 
 
@@ -66,10 +76,10 @@ public class Vehicle : MonoBehaviour
         else
             followPath(p);
 
-
+        if (limitedBorders)
+            wrapAround();
         Move();
         rot();
-        wrapAround();
     }
 
     
@@ -170,7 +180,7 @@ public class Vehicle : MonoBehaviour
         
         if (worldRecord > p.radius && worldRecord != 10000000)
         {
-            seek(target);
+            applyForce(seek(target));
         }
        
         
@@ -207,8 +217,7 @@ public class Vehicle : MonoBehaviour
 
     public Vector2 cohesion(Vehicle[] boids)
     {
-        float desiredSeparation = radius * 2;
-        float desiredCohesion = radius * 2 * 4;
+        float desiredCohesion = radius * 2 * cohesionMultiplier;
         Vector2 sum = new Vector2();
         int count = 0;
 
@@ -292,7 +301,7 @@ public class Vehicle : MonoBehaviour
         if (debug)
         {
             Handles.DrawWireDisc(transform.position, new Vector3(0, 0, 1), radius);
-            Handles.DrawWireDisc(transform.position, new Vector3(0, 0, 1), radius * 4);
+            Handles.DrawWireDisc(transform.position, new Vector3(0, 0, 1), radius * cohesionMultiplier);
         }
     }
 
