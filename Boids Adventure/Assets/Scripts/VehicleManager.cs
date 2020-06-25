@@ -6,19 +6,20 @@ public class VehicleManager : MonoBehaviour
 {
     public Vehicle[] vehicles;
     public bool debug = false;
-    public bool cohesion = false;
-    public bool seperation = false;
+    [SerializeField]
+    bool applyBehaviors = true;
+    
 
 
     void Update()
     {
-        foreach(Vehicle v in vehicles)
+        if (applyBehaviors)
         {
-            if(seperation)
-                v.seperate(vehicles);
-            if(cohesion)
-                v.cohesion(vehicles);
-            v.debug = debug;
+            foreach (Vehicle v in vehicles)
+            {
+                v.applyBehaviors(vehicles);
+                v.debug = debug;
+            }
         }
     }
 }

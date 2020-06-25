@@ -31,8 +31,9 @@ public class Vehicle : MonoBehaviour
 
     [SerializeField]
     float radius = 2f;
-    
-  
+
+    public Transform roomBorderMax;
+    public Transform roomBorderMin;
 
 
 
@@ -68,6 +69,7 @@ public class Vehicle : MonoBehaviour
 
         Move();
         rot();
+        wrapAround();
     }
 
     
@@ -90,11 +92,21 @@ public class Vehicle : MonoBehaviour
         acceleration *= 0;
     }
 
+    public void wrapAround() {
+        if (transform.position.x > roomBorderMax.position.x)
+            transform.position = new Vector3(roomBorderMin.position.x, transform.position.y, 0);
+        else if (transform.position.x < roomBorderMin.position.x)
+            transform.position = new Vector3(roomBorderMax.position.x, transform.position.y, 0);
+        if (transform.position.y > roomBorderMax.position.y)
+            transform.position = new Vector3(transform.position.x, roomBorderMin.position.y, 0);
+        else if (transform.position.y < roomBorderMin.position.y)
+            transform.position = new Vector3(transform.position.x, roomBorderMax.position.y, 0);
+    }
 
 
 
     //Steering Force = Desired velocity - Actual velocity
-    public void seek(Vector2 target)
+    public Vector2 seek(Vector2 target)
     {        
         Vector2 desiredVel = target - (Vector2)transform.position;
         desiredVel.Normalize();
@@ -102,8 +114,8 @@ public class Vehicle : MonoBehaviour
         Vector2 SteerForce = desiredVel - velocity;
         
         SteerForce = Vector2.ClampMagnitude(SteerForce, MaxForce);
-        
-        applyForce(SteerForce);
+
+        return SteerForce;
     }
 
 
@@ -124,7 +136,7 @@ public class Vehicle : MonoBehaviour
         
         Vector2 circleOffset = new Vector2(wanderR * Mathf.Cos(h + wanderTheta), wanderR * Mathf.Sin(h + wanderTheta));
         Vector2 target = circlePos + circleOffset;
-        seek(target);
+        applyForce(seek(target));
         drawWanderStuff(transform.position, circlePos, target, wanderR);
     }
 
@@ -164,7 +176,7 @@ public class Vehicle : MonoBehaviour
         
     }
 
-    public void seperate(Vehicle[] boids ) {
+    public Vector2 separate(Vehicle[] boids ) {
         float desiredSeparation = radius * 2;
         Vector2 sum = new Vector2();
         int count = 0;
@@ -174,9 +186,9 @@ public class Vehicle : MonoBehaviour
             float d = Vector2.Distance(transform.position, v.transform.position);
             if ((d > 0) && (d < desiredSeparation))
             {
-                Vector2 diff = transform.position - v.transform.position;
+                Vector2 diff = transform.position - v.transform.position; //This implies from obstacle to gameObject
                 diff.Normalize();
-                diff /= d;
+                diff /= d; //As it will be more the closer they are
                 sum += diff;
                 count++;
             }
@@ -186,30 +198,28 @@ public class Vehicle : MonoBehaviour
             sum /= count;
             sum.Normalize();
             sum *= MaxSpeed;
-            Vector2 steerForce = sum - velocity;
-            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce*2.5f);
-            applyForce(steerForce);
+            Vector2 steerForce = sum - velocity; //SteerForce = desired - current velocity
+            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce);
+            return steerForce;
         }
-
-
+        return new Vector2(0,0);
     }
 
-    public void cohesion(Vehicle[] boids)
+    public Vector2 cohesion(Vehicle[] boids)
     {
-        float desiredCohesion = radius * 2 * 5;
         float desiredSeparation = radius * 2;
+        float desiredCohesion = radius * 2 * 4;
         Vector2 sum = new Vector2();
         int count = 0;
 
         foreach (Vehicle v in boids)
         {
-
             float d = Vector2.Distance(transform.position, v.transform.position);
-            if ((d > 0) && (d < desiredCohesion) && (d > desiredSeparation))
+            if ((d > 0) && (d > desiredCohesion))
             {
-                Vector2 diff = transform.position - v.transform.position;
+                Vector2 diff = v.transform.position - transform.position; //This implies from gameObject to obstacle
                 diff.Normalize();
-                diff /= d;
+                diff *= d; //As it will be more the closer they are
                 sum += diff;
                 count++;
             }
@@ -219,11 +229,26 @@ public class Vehicle : MonoBehaviour
             sum /= count;
             sum.Normalize();
             sum *= MaxSpeed;
-            Vector2 steerForce = sum - velocity;
-            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce*2.5f);
-            applyForce(-steerForce);
+            Vector2 steerForce = sum - velocity; //SteerForce = desired - current velocity
+            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce);
+            return steerForce;
         }
+        return new Vector2(0, 0);
     }
+
+
+
+    public void applyBehaviors(Vehicle[] boids) {
+        Vector2 separationForce = separate(boids);
+        Vector2 cohesionForce = cohesion(boids);
+
+        separationForce *= 2.5f;
+        cohesionForce *= 1.8f;
+
+        applyForce(separationForce);
+        applyForce(cohesionForce);
+    }
+
 
 
     
@@ -267,6 +292,7 @@ public class Vehicle : MonoBehaviour
         if (debug)
         {
             Handles.DrawWireDisc(transform.position, new Vector3(0, 0, 1), radius);
+            Handles.DrawWireDisc(transform.position, new Vector3(0, 0, 1), radius * 4);
         }
     }
 
