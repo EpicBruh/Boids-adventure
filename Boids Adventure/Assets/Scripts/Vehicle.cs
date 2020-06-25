@@ -31,9 +31,10 @@ public class Vehicle : MonoBehaviour
 
     [SerializeField]
     float radius = 2f;
-    
-  
 
+
+    public Transform roomBorderMax;
+    public Transform roomBorderMin;
 
 
 
@@ -68,6 +69,7 @@ public class Vehicle : MonoBehaviour
 
         Move();
         rot();
+        wrapAround();
     }
 
     
@@ -88,6 +90,17 @@ public class Vehicle : MonoBehaviour
         velocity = Vector2.ClampMagnitude(velocity, MaxSpeed);
         transform.position += (Vector3)velocity * Time.deltaTime;
         acceleration *= 0;
+    }
+
+    public void wrapAround() {
+        if (transform.position.x > roomBorderMax.position.x)
+            transform.position = new Vector3(roomBorderMin.position.x, transform.position.y, 0);
+        if (transform.position.x < roomBorderMin.position.x)
+            transform.position = new Vector3(roomBorderMax.position.x, transform.position.y, 0);
+        if (transform.position.y > roomBorderMax.position.y)
+            transform.position = new Vector3(transform.position.x, roomBorderMin.position.y, 0);
+        if (transform.position.y < roomBorderMin.position.y)
+            transform.position = new Vector3(transform.position.x, roomBorderMax.position.y, 0);
     }
 
 

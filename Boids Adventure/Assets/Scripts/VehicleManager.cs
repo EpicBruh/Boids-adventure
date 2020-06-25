@@ -22,7 +22,8 @@ public class VehicleManager : MonoBehaviour
             //v.applyBehaviors(vehicles);
             //v.flock(vehicles);
             // v.debug = debug;
-            v.seperate(vehicles);
+            v.applyForce(v.seperate(vehicles)*2);
+            
         }
     }
 }
