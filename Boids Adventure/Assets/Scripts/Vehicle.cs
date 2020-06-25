@@ -59,8 +59,8 @@ public class Vehicle : MonoBehaviour
         {
             if (selfMove)
                 wander();
-            else
-                applyForce(gridManager.FlowField(transform.position));
+            //else
+                //applyForce(gridManager.FlowField(transform.position));
         }
         else
             followPath(p);
@@ -94,7 +94,7 @@ public class Vehicle : MonoBehaviour
 
 
     //Steering Force = Desired velocity - Actual velocity
-    public void seek(Vector2 target)
+    public Vector2 seek(Vector2 target)
     {        
         Vector2 desiredVel = target - (Vector2)transform.position;
         desiredVel.Normalize();
@@ -102,8 +102,8 @@ public class Vehicle : MonoBehaviour
         Vector2 SteerForce = desiredVel - velocity;
         
         SteerForce = Vector2.ClampMagnitude(SteerForce, MaxForce);
-        
-        applyForce(SteerForce);
+
+        return SteerForce;
     }
 
 
@@ -124,7 +124,7 @@ public class Vehicle : MonoBehaviour
         
         Vector2 circleOffset = new Vector2(wanderR * Mathf.Cos(h + wanderTheta), wanderR * Mathf.Sin(h + wanderTheta));
         Vector2 target = circlePos + circleOffset;
-        seek(target);
+        applyForce(seek(target));
         drawWanderStuff(transform.position, circlePos, target, wanderR);
     }
 
@@ -164,7 +164,7 @@ public class Vehicle : MonoBehaviour
         
     }
 
-    public void seperate(Vehicle[] boids ) {
+    public Vector2 seperate(Vehicle[] boids ) {
         float desiredSeparation = radius * 2;
         Vector2 sum = new Vector2();
         int count = 0;
@@ -187,14 +187,74 @@ public class Vehicle : MonoBehaviour
             sum.Normalize();
             sum *= MaxSpeed;
             Vector2 steerForce = sum - velocity;
-            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce*2.5f);
-            applyForce(steerForce);
+            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce);
+            //applyForce(steerForce);
+            return steerForce;
         }
 
-
+        return new Vector2();
     }
 
-    public void cohesion(Vehicle[] boids)
+    public void applyBehaviors(Vehicle[] boids)
+    {
+        Vector2 separateForce = seperate(boids);
+        Vector2 cohesionForce = cohesion(boids);
+        Vector2 seekForce = seek((Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition));
+
+        cohesionForce *= 1.0f;
+        separateForce *= 1.5f;
+        seekForce *= 0.5f;
+
+        applyForce(cohesionForce);
+        applyForce(separateForce);
+        applyForce(seekForce);
+    }
+
+    public void flock(Vehicle[] boids)
+    {
+        Vector2 separateForce = seperate(boids);
+        Vector2 cohesionForce = cohesion(boids);
+        Vector2 alignForce = align(boids);
+
+        cohesionForce *= 1.0f;
+        separateForce *= 1.1f;
+        alignForce *= 1.0f;
+
+        
+        applyForce(separateForce);
+        applyForce(alignForce);
+        applyForce(cohesionForce);
+        
+    }
+
+    public Vector2 align(Vehicle[] boids)
+    {
+        float neighbourDist = radius * 2 * 4;
+        Vector2 sum = new Vector2();
+        int count = 0;
+        foreach(Vehicle boid in boids)
+        {
+            float d = Vector2.Distance(transform.position, boid.transform.position);
+            if(d > 0 && d < neighbourDist)
+            {
+                sum += boid.velocity;
+                count++;
+            }
+        }
+        if (count > 0)
+        {
+            sum /= count;
+            sum.Normalize();
+            sum *= MaxSpeed;
+            Vector2 steerForce = sum - velocity;
+            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce);
+            return steerForce;
+        }
+        else
+            return new Vector2();
+    }
+
+    public Vector2 cohesion(Vehicle[] boids)
     {
         float desiredCohesion = radius * 2 * 5;
         float desiredSeparation = radius * 2;
@@ -207,9 +267,7 @@ public class Vehicle : MonoBehaviour
             float d = Vector2.Distance(transform.position, v.transform.position);
             if ((d > 0) && (d < desiredCohesion) && (d > desiredSeparation))
             {
-                Vector2 diff = transform.position - v.transform.position;
-                diff.Normalize();
-                diff /= d;
+                Vector2 diff = v.transform.position;
                 sum += diff;
                 count++;
             }
@@ -217,12 +275,10 @@ public class Vehicle : MonoBehaviour
         if (count > 0)
         {
             sum /= count;
-            sum.Normalize();
-            sum *= MaxSpeed;
-            Vector2 steerForce = sum - velocity;
-            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce*2.5f);
-            applyForce(-steerForce);
+            return sum;
         }
+        else
+            return new Vector2();
     }
 
 

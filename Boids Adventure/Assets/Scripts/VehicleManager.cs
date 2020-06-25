@@ -14,11 +14,15 @@ public class VehicleManager : MonoBehaviour
     {
         foreach(Vehicle v in vehicles)
         {
-            if(seperation)
+            /*if(seperation)
                 v.seperate(vehicles);
             if(cohesion)
                 v.cohesion(vehicles);
-            v.debug = debug;
+            v.debug = debug;*/
+            //v.applyBehaviors(vehicles);
+            //v.flock(vehicles);
+            // v.debug = debug;
+            v.seperate(vehicles);
         }
     }
 }
