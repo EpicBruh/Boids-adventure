@@ -180,7 +180,7 @@ public class Vehicle : MonoBehaviour
         
         if (worldRecord > p.radius && worldRecord != 10000000)
         {
-            applyForce(seek(target));
+            applyForce(seek(target) *5f);
         }
        
         
@@ -245,17 +245,48 @@ public class Vehicle : MonoBehaviour
         return new Vector2(0, 0);
     }
 
+    public Vector2 align(Vehicle[] boids)
+    {
+        float neighborDist = radius * 2 * cohesionMultiplier;
+
+        Vector2 sum = new Vector2();
+        int count = 0;
+        foreach(Vehicle v in boids)
+        {
+            float d = Vector2.Distance(transform.position, v.transform.position);
+            if((d>0) && d < neighborDist)
+            {
+                sum += v.velocity;
+                count++;
+            }
+        }
+        if (count > 0)
+        {
+            sum /= count;
+            sum.Normalize();
+            sum *= MaxSpeed;
+            Vector2 steerForce = sum - velocity;
+            steerForce = Vector2.ClampMagnitude(steerForce, MaxForce);
+            return steerForce;
+        }
+        else
+            return new Vector2();
+    }
+
 
 
     public void applyBehaviors(Vehicle[] boids) {
         Vector2 separationForce = separate(boids);
         Vector2 cohesionForce = cohesion(boids);
+        Vector2 alignForce = align(boids);
 
         separationForce *= 2.5f;
         cohesionForce *= 1.8f;
+        alignForce *= 1.7f;
 
         applyForce(separationForce);
         applyForce(cohesionForce);
+        applyForce(alignForce);
     }
 
 
