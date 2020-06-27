@@ -54,7 +54,7 @@ public class Vehicle : MonoBehaviour
         
         if (randomVelocity)
         {
-            velocity = new Vector2(Random.Range(0,4), Random.Range(0,2));
+            velocity = new Vector2(Random.Range(-1,1), Random.Range(-1,1));
         }
         else
         {
@@ -70,8 +70,8 @@ public class Vehicle : MonoBehaviour
         {
             if (selfMove)
                 wander();
-            else
-                applyForce(gridManager.FlowField(transform.position));
+            //else
+               // applyForce(gridManager.FlowField(transform.position));
         }
         else
             followPath(p);
@@ -186,7 +186,8 @@ public class Vehicle : MonoBehaviour
         
     }
 
-    public Vector2 separate(Vehicle[] boids ) {
+    //public Vector2 separate(Vehicle[] boids ) {
+    public Vector2 separate(List<Vehicle> boids) { 
         float desiredSeparation = radius * 2;
         Vector2 sum = new Vector2();
         int count = 0;
@@ -215,7 +216,7 @@ public class Vehicle : MonoBehaviour
         return new Vector2(0,0);
     }
 
-    public Vector2 cohesion(Vehicle[] boids)
+    /*public Vector2 cohesion(Vehicle[] boids)
     {
         float desiredCohesion = radius * 2 * cohesionMultiplier;
         Vector2 sum = new Vector2();
@@ -243,9 +244,31 @@ public class Vehicle : MonoBehaviour
             return steerForce;
         }
         return new Vector2(0, 0);
+    }*/
+
+    public Vector2 cohesion(List<Vehicle> boids)
+    {
+        float desiredCohesion = radius * 2 * cohesionMultiplier;
+        Vector2 sum = new Vector2();
+        int count = 0;
+        foreach(Vehicle v in boids) {
+            float d = Vector2.Distance(transform.position, v.transform.position);
+            if ((d > 0) && d < desiredCohesion)
+            {
+                sum += (Vector2)v.transform.position;
+                count++;
+            }
+        }
+        if (count > 0)
+        {
+            sum /= count;
+            return seek(sum);
+        }
+        else
+            return new Vector2();
     }
 
-    public Vector2 align(Vehicle[] boids)
+    public Vector2 align(List<Vehicle> boids)
     {
         float neighborDist = radius * 2 * cohesionMultiplier;
 
@@ -275,13 +298,13 @@ public class Vehicle : MonoBehaviour
 
 
 
-    public void applyBehaviors(Vehicle[] boids) {
+    public void applyBehaviors(List<Vehicle> boids) {
         Vector2 separationForce = separate(boids);
         Vector2 cohesionForce = cohesion(boids);
         Vector2 alignForce = align(boids);
 
-        separationForce *= 2.5f;
-        cohesionForce *= 1.8f;
+        separationForce *= 5f;
+        cohesionForce *= 1.0f;
         alignForce *= 1.7f;
 
         applyForce(separationForce);
